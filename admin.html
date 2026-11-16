@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Organigramm pflegen – Graubünden Ferien</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+  :root{--ink:#1f2d3a;--muted:#5d6b78;--line:#d6dbe0;--panel:#f4f5f7;--accent:#12573F;--warn:#b26a00;--bad:#a12a2a}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Noto Sans",system-ui,sans-serif;color:var(--ink);font-size:14px;line-height:1.4;background:#fff}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  h1{margin:0;font-size:24px}
+  .who{color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  button,.btn{font:inherit;padding:7px 14px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+  button:hover,.btn:hover{background:var(--panel)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{filter:brightness(1.1)}
+  button.danger{color:var(--bad);border-color:#e3bcbc}
+  button:disabled{opacity:.5;cursor:default}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #4F7399;outline-offset:1px}
+  input,select,textarea{font:inherit;padding:6px 8px;border:1px solid #c3c9cf;border-radius:5px;background:#fff;color:var(--ink);max-width:100%}
+  label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+  label input,label select,label textarea{font-size:14px;color:var(--ink)}
+  label.chk{flex-direction:row;align-items:center;gap:7px;font-size:14px;color:var(--ink)}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .tab{border:0;border-bottom:3px solid transparent;border-radius:0;padding:8px 14px;background:none;font-weight:600;color:var(--muted)}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .bar .grow{flex:1;min-width:200px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #e8ebee;vertical-align:top}
+  th{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel);position:sticky;top:0}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#f8f9fa}
+  tr.inactive td{color:#8a949d}
+  .badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:var(--panel)}
+  .badge.ok{background:#e1f1e8;color:#1e6b47}.badge.warn{background:#fff0d6;color:var(--warn)}.badge.bad{background:#f8e0e0;color:var(--bad)}
+  .small{font-size:12px;color:var(--muted)}
+  .box{max-width:420px;margin:60px auto;padding:26px;border:1px solid var(--line);border-radius:8px}
+  .box h2{margin-top:0}
+  .box input{width:100%;margin:10px 0}
+  .msg{padding:10px 12px;border-radius:6px;margin:10px 0;font-size:13px}
+  .msg.ok{background:#e1f1e8}.msg.err{background:#f8e0e0}.msg.info{background:var(--panel)}
+  dialog{border:0;border-radius:10px;padding:0;width:min(860px,96vw);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  dialog::backdrop{background:rgba(20,30,40,.45)}
+  .dlg-h{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .dlg-h h2{margin:0;font-size:18px}
+  .dlg-b{padding:18px 22px;overflow:auto;max-height:calc(92vh - 140px)}
+  .dlg-f{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
+  .dlg-f .r{display:flex;gap:10px;margin-left:auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  .grid .wide{grid-column:1/-1}
+  h3{font-size:14px;margin:20px 0 8px}
+  .zrow{display:grid;grid-template-columns:2.2fr 1fr .8fr 1.6fr 1.6fr auto auto;gap:6px;align-items:end;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .zrow label{font-size:11px}
+  .zhead{font-size:12px;color:var(--muted)}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2d3a;color:#fff;padding:10px 18px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw}
+  #toast.show{opacity:1}
+  @media(max-width:760px){.zrow{grid-template-columns:1fr 1fr}.wrap{padding:14px 12px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="small">Wird geladen …</p></div>
+<dialog id="dlg"></dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const CONFIG = {
+  url: 'https://buancuvsjxokxijbnrxi.supabase.co',
+  anonKey: 'sb_publishable_SOw8SiWgP7NQ2mr_MI0j5w_tdMsADsF'
+};
+const sb = supabase.createClient(CONFIG.url, CONFIG.anonKey, { db: { schema: 'organigramm' } });
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => (v === '' || v == null) ? null : Number(String(v).replace(',', '.'));
+const nul = v => { v = (v ?? '').trim(); return v === '' ? null : v; };
+const app = $('#app'), dlg = $('#dlg');
+let toastT;
+function toast(t){ const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), 3500); }
+
+const S = { user: null, units: [], people: [], det: new Map(), zu: [], pr: new Map(), view: 'personen', q: '', onlyActive: true };
+
+/* ================= Login ================= */
+function loginView(msg = '', kind = 'info'){
+  app.innerHTML = `<div class="box"><h2>Organigramm pflegen</h2>
+    <p class="small">Melde dich mit deiner Firmen-E-Mail an. Du erhältst einen Anmeldelink per E-Mail.</p>
+    <form id="lf"><label>E-Mail-Adresse<input type="email" id="em" required autocomplete="email" placeholder="vorname.nachname@graubuenden.ch"></label>
+    <button class="primary" style="width:100%">Anmeldelink senden</button></form>
+    ${msg ? `<div class="msg ${kind}">${esc(msg)}</div>` : ''}</div>`;
+  $('#lf').onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button'); btn.disabled = true;
+    const { error } = await sb.auth.signInWithOtp({
+      email: $('#em').value.trim(),
+      options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname }
+    });
+    btn.disabled = false;
+    if (error) loginView('Anmeldung nicht möglich: ' + error.message + ' (Ist die Adresse für den Zugang freigeschaltet?)', 'err');
+    else loginView('Link gesendet. Bitte öffne die E-Mail und klicke auf den Link.', 'ok');
+  };
+}
+function noAccessView(){
+  app.innerHTML = `<div class="box"><h2>Kein Zugriff</h2>
+    <p>Du bist als <b>${esc(S.user.email)}</b> angemeldet, hast aber keine Berechtigung, das Organigramm zu pflegen.</p>
+    <button id="lo">Abmelden</button></div>`;
+  $('#lo').onclick = () => sb.auth.signOut();
+}
+
+/* ================= Daten ================= */
+async function load(){
+  const q = [
+    sb.from('einheit').select('*').order('sortierung'),
+    sb.from('mitarbeiter').select('*').order('nachname'),
+    sb.from('mitarbeiter_details').select('*'),
+    sb.from('zuordnung').select('*'),
+    sb.from('v_pensum_pruefung').select('*')
+  ];
+  const r = await Promise.all(q);
+  for (const x of r) if (x.error) throw x.error;
+  S.units = r[0].data; S.people = r[1].data;
+  S.det = new Map(r[2].data.map(d => [d.mitarbeiter_id, d]));
+  S.zu = r[3].data;
+  S.pr = new Map(r[4].data.map(p => [p.mitarbeiter_id, p]));
+}
+const unitById = id => S.units.find(u => u.id === id);
+const personById = id => S.people.find(p => p.id === id);
+const pname = p => p ? `${p.vorname} ${p.nachname}` : '';
+function unitOrder(){            // Baum-Reihenfolge mit Pfad
+  const out = [];
+  const kids = id => S.units.filter(u => u.uebergeordnet_id === id).sort((a,b) => a.sortierung - b.sortierung || a.name.localeCompare(b.name));
+  (function walk(id, path){ kids(id).forEach(u => { const p = [...path, u.name]; out.push({ u, label: p.join(' › '), depth: path.length }); walk(u.id, p); }); })(null, []);
+  return out;
+}
+function descendants(id){
+  const s = new Set([id]); let ch = true;
+  while (ch){ ch = false; S.units.forEach(u => { if (u.uebergeordnet_id && s.has(u.uebergeordnet_id) && !s.has(u.id)){ s.add(u.id); ch = true; } }); }
+  return s;
+}
+
+/* ================= Hauptansicht ================= */
+function shell(){
+  app.innerHTML = `<header><h1>Organigramm pflegen</h1>
+    <div class="who"><a class="btn" href="index.html" target="_blank" rel="noopener">Organigramm ansehen</a>
+    <span>${esc(S.user.email)}</span><button id="lo">Abmelden</button></div></header>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-v="personen" aria-selected="${S.view === 'personen'}">Personen</button>
+      <button class="tab" role="tab" data-v="einheiten" aria-selected="${S.view === 'einheiten'}">Einheiten</button>
+    </div><div id="main"></div>`;
+  $('#lo').onclick = () => sb.auth.signOut();
+  app.querySelectorAll('.tab').forEach(b => b.onclick = () => { S.view = b.dataset.v; shell(); });
+  S.view === 'personen' ? viewPersonen() : viewEinheiten();
+}
+
+function statusBadge(id){
+  const p = S.pr.get(id); if (!p) return '';
+  const m = { 'ok':['ok','Pensum ok'], 'Pensum fehlt':['warn','Pensum fehlt'], 'Aufteilung offen':['warn','Aufteilung offen'], 'Abweichung':['bad','Abweichung'] }[p.status] || ['', p.status];
+  return `<span class="badge ${m[0]}">${m[1]}</span>`;
+}
+function viewPersonen(){
+  const q = S.q.toLowerCase();
+  const rows = S.people.filter(p => (!S.onlyActive || p.aktiv) && (!q || (pname(p) + ' ' + (p.funktion || '')).toLowerCase().includes(q)));
+  $('#main').innerHTML = `<div class="bar">
+      <input class="grow" id="sq" type="search" placeholder="Person suchen …" value="${esc(S.q)}">
+      <label class="chk"><input type="checkbox" id="oa" ${S.onlyActive ? 'checked' : ''}> nur aktive</label>
+      <button class="primary" id="np">+ Person hinzufügen</button></div>
+    <table><thead><tr><th>Name</th><th>Funktion</th><th>Einheiten</th><th>Pensum</th><th>Prüfung</th><th>Status</th></tr></thead><tbody>
+    ${rows.map(p => {
+      const us = S.zu.filter(z => z.mitarbeiter_id === p.id).map(z => unitById(z.einheit_id)?.name).filter(Boolean);
+      const d = S.det.get(p.id);
+      return `<tr data-id="${p.id}" class="${p.aktiv ? '' : 'inactive'}" tabindex="0">
+        <td><b>${esc(pname(p))}</b></td><td>${esc(p.funktion || '')}</td>
+        <td class="small">${esc([...new Set(us)].join(', '))}</td>
+        <td>${d ? d.pensum_prozent + ' %' : '–'}</td><td>${statusBadge(p.id)}</td>
+        <td>${p.aktiv ? '' : '<span class="badge">ausgetreten</span>'}</td></tr>`;
+    }).join('') || '<tr><td colspan="6" class="small">Keine Treffer.</td></tr>'}
+    </tbody></table><p class="small">${rows.length} von ${S.people.length} Personen.</p>`;
+  $('#sq').oninput = e => { S.q = e.target.value; const pos = e.target.selectionStart; viewPersonen(); const i = $('#sq'); i.focus(); i.setSelectionRange(pos, pos); };
+  $('#oa').onchange = e => { S.onlyActive = e.target.checked; viewPersonen(); };
+  $('#np').onclick = () => openPerson(null);
+  $('#main').querySelectorAll('tbody tr[data-id]').forEach(tr => {
+    tr.onclick = () => openPerson(tr.dataset.id);
+    tr.onkeydown = e => { if (e.key === 'Enter') openPerson(tr.dataset.id); };
+  });
+}
+
+/* ================= Person bearbeiten ================= */
+let Z = [], EDIT = null;
+function openPerson(id){
+  EDIT = id ? personById(id) : null;
+  const d = (id && S.det.get(id)) || {};
+  const p = EDIT || { vorname: '', nachname: '', funktion: '', email: '', telefon: '', aktiv: true };
+  Z = id ? S.zu.filter(z => z.mitarbeiter_id === id).map(z => ({ ...z })) : [];
+  dlg.innerHTML = `<form method="dialog" id="pf">
+    <div class="dlg-h"><h2>${id ? esc(pname(p)) : 'Neue Person'}</h2><button type="button" id="x" aria-label="Schliessen">✕</button></div>
+    <div class="dlg-b">
+      <div class="grid">
+        <label>Vorname<input id="f_vn" required value="${esc(p.vorname)}"></label>
+        <label>Nachname<input id="f_nn" required value="${esc(p.nachname)}"></label>
+        <label>Funktion (Standard)<input id="f_fu" value="${esc(p.funktion || '')}"></label>
+        <label>Gesamtpensum in % <input id="f_pe" type="number" min="1" max="100" step="0.5" value="${d.pensum_prozent ?? ''}"></label>
+        <label>E-Mail<input id="f_em" type="email" value="${esc(p.email || '')}"></label>
+        <label>Telefon<input id="f_te" value="${esc(p.telefon || '')}"></label>
+        <label>Eintrittsdatum<input id="f_ei" type="date" value="${d.eintrittsdatum || ''}"></label>
+        <label>Austrittsdatum<input id="f_au" type="date" value="${d.austrittsdatum || ''}"></label>
+        <label class="wide">Bemerkung (intern, nicht öffentlich)<textarea id="f_be" rows="2">${esc(d.bemerkung || '')}</textarea></label>
+        <label class="chk"><input type="checkbox" id="f_ak" ${p.aktiv ? 'checked' : ''}> aktiv (im Organigramm sichtbar)</label>
+      </div>
+      <h3>Zuordnungen und Linienvorgesetzte</h3>
+      <p class="small">Eine Person kann in mehreren Einheiten arbeiten, jeweils mit eigenem Pensum, eigener Funktion und eigenem Linienvorgesetzten.</p>
+      <div id="zs"></div>
+      <p><button type="button" id="za">+ Zuordnung hinzufügen</button> <span id="zsum" class="small"></span></p>
+      <div id="dmsg"></div>
+    </div>
+    <div class="dlg-f">
+      <span>${id && p.aktiv ? '<button type="button" id="aus">Austritt erfassen</button>' : ''}</span>
+      <div class="r"><button type="button" id="ca">Abbrechen</button><button class="primary" id="sv" value="x">Speichern</button></div>
+    </div></form>`;
+  renderZ();
+  $('#x').onclick = $('#ca').onclick = () => dlg.close();
+  $('#za').onclick = () => { Z.push({ id: null, einheit_id: '', rolle: 'mitglied', pensum_prozent: null, funktion: '', vorgesetzter_id: null, ist_haupt: Z.length === 0 }); renderZ(); };
+  $('#f_pe').oninput = sumHint;
+  if ($('#aus')) $('#aus').onclick = () => { $('#f_ak').checked = false; if (!$('#f_au').value) $('#f_au').value = new Date().toISOString().slice(0, 10); toast('Austritt vorbereitet: bitte Datum prüfen und speichern.'); };
+  $('#pf').onsubmit = e => { e.preventDefault(); savePerson(); };
+  dlg.showModal();
+}
+function renderZ(){
+  const uo = unitOrder();
+  const act = S.people.filter(x => x.aktiv && (!EDIT || x.id !== EDIT.id)).sort((a, b) => a.nachname.localeCompare(b.nachname));
+  $('#zs').innerHTML = Z.map((z, i) => `<div class="zrow" data-i="${i}">
+    <label>Einheit<select data-f="einheit_id"><option value="">– wählen –</option>${uo.map(o => `<option value="${o.u.id}" ${o.u.id === z.einheit_id ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select></label>
+    <label>Rolle<select data-f="rolle"><option value="leitung" ${z.rolle === 'leitung' ? 'selected' : ''}>Leitung</option><option value="mitglied" ${z.rolle === 'mitglied' ? 'selected' : ''}>Mitglied</option></select></label>
+    <label>Pensum %<input data-f="pensum_prozent" type="number" min="1" max="100" step="0.5" value="${z.pensum_prozent ?? ''}"></label>
+    <label>Funktion in dieser Einheit<input data-f="funktion" value="${esc(z.funktion || '')}"></label>
+    <label>Linienvorgesetzte/r<select data-f="vorgesetzter_id"><option value="">–</option>${act.map(a => `<option value="${a.id}" ${a.id === z.vorgesetzter_id ? 'selected' : ''}>${esc(pname(a))}</option>`).join('')}</select></label>
+    <label class="chk"><input type="radio" name="haupt" data-f="ist_haupt" ${z.ist_haupt ? 'checked' : ''}> Haupt</label>
+    <button type="button" class="danger" data-del="${i}" aria-label="Zuordnung entfernen">✕</button></div>`).join('') || '<p class="small">Keine Zuordnung.</p>';
+  $('#zs').querySelectorAll('[data-f]').forEach(el => el.onchange = el.oninput = () => {
+    const i = +el.closest('.zrow').dataset.i, f = el.dataset.f;
+    if (f === 'ist_haupt'){ Z.forEach((x, j) => x.ist_haupt = j === i); }
+    else if (f === 'pensum_prozent'){ Z[i][f] = num(el.value); sumHint(); }
+    else Z[i][f] = el.value || (f === 'funktion' ? '' : null);
+  });
+  $('#zs').querySelectorAll('[data-del]').forEach(b => b.onclick = () => { Z.splice(+b.dataset.del, 1); if (Z.length && !Z.some(x => x.ist_haupt)) Z[0].ist_haupt = true; renderZ(); });
+  sumHint();
+}
+function sumHint(){
+  const el = $('#zsum'); if (!el) return;
+  const s = Z.reduce((a, z) => a + (Number(z.pensum_prozent) || 0), 0), g = num($('#f_pe')?.value);
+  const hasAll = Z.length && Z.every(z => z.pensum_prozent != null);
+  el.textContent = Z.length ? `Summe Zuordnungen: ${s} %` + (g != null && hasAll ? (Math.abs(s - g) < 0.01 ? ' ✓ passt zum Gesamtpensum' : ` ⚠ weicht vom Gesamtpensum (${g} %) ab`) : '') : '';
+}
+function dmsg(t, k = 'err'){ $('#dmsg').innerHTML = t ? `<div class="msg ${k}">${esc(t)}</div>` : ''; }
+
+async function savePerson(){
+  dmsg('');
+  const vn = $('#f_vn').value.trim(), nn = $('#f_nn').value.trim();
+  const aktiv = $('#f_ak').checked, wasActive = EDIT ? EDIT.aktiv : null;
+  const pe = num($('#f_pe').value), ei = nul($('#f_ei').value), au = nul($('#f_au').value), be = nul($('#f_be').value);
+  if (Z.some(z => !z.einheit_id)) return dmsg('Bitte bei jeder Zuordnung eine Einheit wählen.');
+  if (new Set(Z.map(z => z.einheit_id)).size !== Z.length) return dmsg('Dieselbe Einheit ist mehrfach zugeordnet.');
+  if ((ei || au || be) && pe == null) return dmsg('Bitte das Gesamtpensum angeben (nötig für Eintritts-/Austrittsdatum und Bemerkung).');
+  if (pe != null && (pe <= 0 || pe > 100)) return dmsg('Das Pensum muss zwischen 1 und 100 liegen.');
+  if (Z.some(z => z.pensum_prozent != null && (z.pensum_prozent <= 0 || z.pensum_prozent > 100))) return dmsg('Pensum in Zuordnung ungültig (1 bis 100).');
+  if (Z.length && !Z.some(z => z.ist_haupt)) Z[0].ist_haupt = true;
+
+  const btn = $('#sv'); btn.disabled = true;
+  const backup = EDIT ? S.zu.filter(z => z.mitarbeiter_id === EDIT.id) : [];
+  try {
+    const row = { vorname: vn, nachname: nn, funktion: nul($('#f_fu').value), email: nul($('#f_em').value), telefon: nul($('#f_te').value), aktiv };
+    let id = EDIT?.id;
+    if (id){ const r = await sb.from('mitarbeiter').update(row).eq('id', id); if (r.error) throw r.error; }
+    else {
+      row.sortierung = Math.max(0, ...S.people.map(p => p.sortierung || 0)) + 1;
+      const r = await sb.from('mitarbeiter').insert(row).select('id').single(); if (r.error) throw r.error; id = r.data.id;
+    }
+    if (pe != null){
+      const r = await sb.from('mitarbeiter_details').upsert({ mitarbeiter_id: id, pensum_prozent: pe, eintrittsdatum: ei, austrittsdatum: au, bemerkung: be }); if (r.error) throw r.error;
+    } else { const r = await sb.from('mitarbeiter_details').delete().eq('mitarbeiter_id', id); if (r.error) throw r.error; }
+
+    const del = await sb.from('zuordnung').delete().eq('mitarbeiter_id', id); if (del.error) throw del.error;
+    if (Z.length){
+      const ins = await sb.from('zuordnung').insert(Z.map(z => ({
+        mitarbeiter_id: id, einheit_id: z.einheit_id, rolle: z.rolle, pensum_prozent: z.pensum_prozent,
+        funktion: nul(z.funktion || ''), vorgesetzter_id: z.vorgesetzter_id || null, ist_haupt: !!z.ist_haupt })));
+      if (ins.error){
+        if (backup.length) await sb.from('zuordnung').insert(backup.map(({ id: _i, created_at, ...rest }) => rest));
+        throw ins.error;
+      }
+    }
+    await load();
+
+    let hint = '';
+    if (wasActive && !aktiv){
+      const empty = Z.map(z => z.einheit_id).filter(eid => !S.zu.some(z => z.einheit_id === eid && z.mitarbeiter_id !== id && personById(z.mitarbeiter_id)?.aktiv));
+      if (empty.length && confirm(`Diese Einheiten sind jetzt ohne Person:\n\n${empty.map(e => '• ' + unitById(e).name).join('\n')}\n\nAls «vakant» markieren?`)){
+        const r = await sb.from('einheit').update({ ist_vakant: true }).in('id', empty); if (r.error) throw r.error; await load();
+      }
+      const reports = S.zu.filter(z => z.vorgesetzter_id === id).length;
+      if (reports) hint = ` Achtung: ${reports} Zuordnung(en) haben diese Person noch als Linienvorgesetzte. Bitte prüfen (Tab «Einheiten» → «Vorgesetzte neu berechnen»).`;
+    }
+    dlg.close(); shell(); toast('Gespeichert.' + hint);
+  } catch (e) {
+    dmsg('Speichern fehlgeschlagen: ' + (e.message || e));
+  } finally { btn.disabled = false; }
+}
+
+/* ================= Einheiten ================= */
+function viewEinheiten(){
+  const uo = unitOrder();
+  $('#main').innerHTML = `<div class="bar"><button class="primary" id="nu">+ Einheit hinzufügen</button>
+    <button id="rc" title="Berechnet die Linienvorgesetzten aus der Einheitenhierarchie neu und überschreibt manuelle Änderungen.">Vorgesetzte neu berechnen</button></div>
+    <table><thead><tr><th>Einheit</th><th>Personen</th><th>Spalte</th><th>Sortierung</th><th>Status</th></tr></thead><tbody>
+    ${uo.map(o => { const n = S.zu.filter(z => z.einheit_id === o.u.id && personById(z.mitarbeiter_id)?.aktiv).length;
+      return `<tr data-id="${o.u.id}" tabindex="0"><td style="padding-left:${10 + o.depth * 18}px"><b>${esc(o.u.name)}</b></td><td>${n}</td>
+      <td>${o.u.spalte ?? ''}</td><td>${o.u.sortierung}</td><td>${o.u.ist_vakant ? '<span class="badge warn">vakant</span>' : ''}</td></tr>`; }).join('')}
+    </tbody></table>`;
+  $('#nu').onclick = () => openUnit(null);
+  $('#rc').onclick = async () => {
+    if (!confirm('Die Linienvorgesetzten aller Zuordnungen werden aus der Einheitenhierarchie neu berechnet. Manuell gesetzte Vorgesetzte werden überschrieben. Fortfahren?')) return;
+    const r = await sb.rpc('vorgesetzte_neu_berechnen');
+    if (r.error) return toast('Fehler: ' + r.error.message);
+    await load(); toast(`${r.data} Zuordnung(en) aktualisiert.`);
+  };
+  $('#main').querySelectorAll('tbody tr[data-id]').forEach(tr => {
+    tr.onclick = () => openUnit(tr.dataset.id);
+    tr.onkeydown = e => { if (e.key === 'Enter') openUnit(tr.dataset.id); };
+  });
+}
+function openUnit(id){
+  const u = id ? unitById(id) : { name: '', uebergeordnet_id: null, spalte: null, sortierung: 0, farbe: null, ist_vakant: false, titel_ausblenden: false };
+  const ex = id ? descendants(id) : new Set();
+  const uo = unitOrder().filter(o => !ex.has(o.u.id));
+  dlg.innerHTML = `<form method="dialog" id="uf">
+    <div class="dlg-h"><h2>${id ? esc(u.name) : 'Neue Einheit'}</h2><button type="button" id="x" aria-label="Schliessen">✕</button></div>
+    <div class="dlg-b"><div class="grid">
+      <label class="wide">Name<input id="u_n" required value="${esc(u.name)}"></label>
+      <label class="wide">Übergeordnete Einheit<select id="u_p"><option value="">– oberste Ebene –</option>${uo.map(o => `<option value="${o.u.id}" ${o.u.id === u.uebergeordnet_id ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select></label>
+      <label>Spalte im Bereich (1 bis 6)<input id="u_s" type="number" min="1" max="6" value="${u.spalte ?? ''}"></label>
+      <label>Sortierung<input id="u_o" type="number" value="${u.sortierung ?? 0}"></label>
+      <label>Eigene Farbe (nur Bereiche)<input id="u_c" type="color" value="${u.farbe || '#888888'}"></label>
+      <label class="chk"><input type="checkbox" id="u_cn" ${u.farbe ? 'checked' : ''}> Farbe verwenden (sonst von oben geerbt)</label>
+      <label class="chk"><input type="checkbox" id="u_v" ${u.ist_vakant ? 'checked' : ''}> vakant (wenn niemand zugeordnet)</label>
+      <label class="chk"><input type="checkbox" id="u_t" ${u.titel_ausblenden ? 'checked' : ''}> Titel in der Box ausblenden</label>
+    </div><div id="dmsg"></div></div>
+    <div class="dlg-f"><span>${id ? '<button type="button" class="danger" id="ud">Einheit löschen</button>' : ''}</span>
+    <div class="r"><button type="button" id="ca">Abbrechen</button><button class="primary" id="sv" value="x">Speichern</button></div></div></form>`;
+  $('#x').onclick = $('#ca').onclick = () => dlg.close();
+  $('#uf').onsubmit = async e => {
+    e.preventDefault(); dmsg('');
+    const row = { name: $('#u_n').value.trim(), uebergeordnet_id: $('#u_p').value || null, spalte: num($('#u_s').value), sortierung: num($('#u_o').value) ?? 0,
+      farbe: $('#u_cn').checked ? $('#u_c').value : null, ist_vakant: $('#u_v').checked, titel_ausblenden: $('#u_t').checked };
+    const r = id ? await sb.from('einheit').update(row).eq('id', id) : await sb.from('einheit').insert(row);
+    if (r.error) return dmsg('Speichern fehlgeschlagen: ' + r.error.message);
+    await load(); dlg.close(); shell(); toast('Gespeichert.');
+  };
+  if (id) $('#ud').onclick = async () => {
+    if (S.units.some(x => x.uebergeordnet_id === id)) return dmsg('Die Einheit hat noch untergeordnete Einheiten. Bitte zuerst diese verschieben oder löschen.');
+    const n = S.zu.filter(z => z.einheit_id === id).length;
+    if (!confirm(`«${u.name}» wirklich löschen?` + (n ? `\n\n${n} Zuordnung(en) von Personen zu dieser Einheit werden ebenfalls gelöscht (die Personen bleiben erhalten).` : ''))) return;
+    const r = await sb.from('einheit').delete().eq('id', id);
+    if (r.error) return dmsg('Löschen fehlgeschlagen: ' + r.error.message);
+    await load(); dlg.close(); shell(); toast('Einheit gelöscht.');
+  };
+  dlg.showModal();
+}
+
+/* ================= Start ================= */
+async function init(session){
+  if (!session){ S.user = null; return loginView(); }
+  S.user = session.user;
+  app.innerHTML = '<p class="small">Wird geladen …</p>';
+  const a = await sb.from('admin').select('user_id').eq('user_id', session.user.id);
+  if (a.error || !a.data?.length) return noAccessView();
+  try { await load(); shell(); }
+  catch (e) { app.innerHTML = `<div class="msg err">Daten konnten nicht geladen werden: ${esc(e.message || e)}</div>`; }
+}
+sb.auth.onAuthStateChange((ev, session) => { if (ev === 'INITIAL_SESSION' || ev === 'SIGNED_IN' || ev === 'SIGNED_OUT'){ if (dlg.open) return; setTimeout(() => init(session), 0); } });
+</script>
+</body>
+</html>
