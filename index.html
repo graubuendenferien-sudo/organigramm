@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Organigramm – Graubünden Ferien</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1f2d3a; --muted:#56636f; --panel:#f2f3f5; --card-line:#dde1e5; --line:#a9b1b9;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:#fff}
+  .page{max-width:1640px;margin:0 auto;padding:28px 28px 22px}
+
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+  h1{margin:0;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:15px;margin-top:6px}
+  .search{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+  .search input{font:inherit;font-size:14px;padding:8px 12px;border:1px solid #c5cbd1;border-radius:6px;min-width:250px;color:var(--ink);background:#fff}
+  .search input:focus-visible{outline:2px solid #4F7399;outline-offset:1px}
+
+  /* ---------- Chart ---------- */
+  .chart{position:relative;font-size:12px;line-height:1.3}
+  .lines{position:absolute;left:0;top:0;pointer-events:none;z-index:1;overflow:visible}
+  .lines path{fill:none;stroke:var(--line);stroke-width:1}
+
+  .ceo-row{display:flex;justify-content:center;margin-bottom:34px}
+  .ceo{position:relative;z-index:2;min-width:13em;text-align:center;padding:.7em 1.6em .75em;border-radius:5px}
+  .ceo b{display:block;font-size:.95em;font-weight:700;letter-spacing:.03em}
+  .ceo span{display:block;font-size:1.2em;margin-top:.15em}
+
+  .bereiche{display:flex;gap:12px;align-items:stretch}
+  .bereich{display:flex;flex-direction:column;min-width:0}
+  .b-head{position:relative;z-index:2;border-radius:5px 5px 0 0;padding:.75em .8em .85em;text-align:center;
+          display:flex;flex-direction:column;justify-content:space-between;gap:.55em}
+  .b-head h2{margin:0;font-size:1.17em;line-height:1.2;font-weight:700;text-wrap:balance}
+  .b-head .lead{font-size:1.08em;line-height:1.3}
+  .b-body{flex:1;background:var(--panel);padding:22px 10px 16px;border-radius:0 0 4px 4px}
+  .cols{display:grid;column-gap:14px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+  .card{position:relative;z-index:2;background:#fff;border:1px solid var(--card-line);border-radius:4px;
+        padding:.62em .55em .68em;text-align:center;transition:opacity .15s, box-shadow .15s}
+  .card h3{margin:0 0 .28em;font-size:1em;line-height:1.22;font-weight:700;text-wrap:balance;overflow-wrap:break-word}
+  .card .p{font-size:.96em;color:var(--muted);line-height:1.32;text-wrap:balance;overflow-wrap:break-word}
+  .card.notitle{padding-top:.7em}
+  .card .vakant{font-style:italic}
+  .nw{white-space:nowrap}
+  .card.dim{opacity:.22}
+  .card.hit{box-shadow:0 0 0 2px #f2a900}
+
+  /* Modus: gestapelt (Tablet) / schmal (Handy) */
+  .chart.stack .bereiche,.chart.narrow .bereiche{flex-direction:column;gap:26px}
+  .chart.stack .ceo-row,.chart.narrow .ceo-row{margin-bottom:26px}
+
+  footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:20px;color:var(--muted);font-size:12px}
+  #status[data-state="live"]::before{content:"● ";color:#2e8b57}
+  #status[data-state="snapshot"]::before{content:"● ";color:#d08a00}
+  .loading{padding:60px 0;text-align:center;color:var(--muted);font-size:14px}
+  .error{padding:16px;border:1px solid #e0b4b4;background:#fdf1f1;border-radius:6px;color:#8a2c2c;font-size:14px}
+
+  @media (max-width:720px){
+    .page{padding:18px 14px}
+    h1{font-size:27px}
+    .search,.search input{width:100%;min-width:0}
+  }
+  @media print{
+    @page{size:A4 landscape;margin:8mm}
+    .search{display:none}
+    .page{padding:0;max-width:none}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+  @media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div>
+      <h1>Organigramm</h1>
+      <div class="sub">Graubünden Ferien</div>
+    </div>
+    <label class="search">Person oder Einheit suchen
+      <input id="q" type="search" placeholder="z. B. Marti oder Finanzen" autocomplete="off">
+    </label>
+  </header>
+
+  <main id="chart" class="chart" aria-live="polite"><div class="loading">Organigramm wird geladen …</div></main>
+
+  <footer>
+    <span id="status" data-state="snapshot"></span>
+    <span>Graubünden Ferien</span>
+  </footer>
+</div>
+
+<script>
+/* ================= Konfiguration ================= */
+const CONFIG = {
+  url: 'https://buancuvsjxokxijbnrxi.supabase.co',
+  // Öffentlicher "anon"/"publishable" Key (Supabase: Project Settings > API Keys).
+  // Darf im HTML stehen. NIEMALS den service_role Key eintragen.
+  anonKey: '',
+  schema: 'organigramm'
+};
+
+/* ============ Gespeicherter Stand (Fallback ohne Live-Verbindung) ============
+   Einheit: [id, name, parent, farbe, sortierung, vakant, spalte, titel_ausblenden] */
+const SNAP_U = [
+ ['GF','Graubünden Ferien',null,'#C4C2BC',0,0,null,0],
+ ['MK','Marketing','GF','#A55248',1,0,null,0],
+ ['SS','Shared Services','GF','#4F7399',2,0,null,0],
+ ['IE','Innovation & Erlebnisentwicklung','GF','#F2A900',3,0,null,0],
+ ['CS','Corporate Services','GF','#12573F',4,0,null,0],
+ ['PA','Partnerschaften','MK',null,1,0,1,0],
+ ['SP','StraPa','PA',null,1,0,null,0],['ST','ST','PA',null,2,0,null,0],['ME','Merchandising','PA',null,3,0,null,0],
+ ['CA','Campaigns','MK',null,2,0,2,0],
+ ['BI','Bike / Gravel / Nordic','CA',null,1,0,null,0],['FA','Familien','CA',null,2,0,null,0],
+ ['WW','Weitwandern / Spezialprojekte','CA',null,3,0,null,0],['EN','Enavant','CA',null,4,0,null,0],
+ ['TR','Touring / Romandie','CA',null,5,0,null,0],['GO','Golf','CA',null,6,0,null,0],
+ ['MB','Mein Bergdorf / Skitouren','CA',null,7,0,null,0],['FT','Fairtrail','CA',null,8,0,null,0],
+ ['CO','Content','MK',null,3,0,3,0],
+ ['DM','Digital Marketing','MK',null,4,0,3,0],
+ ['CC','Content & CRM','DM',null,1,0,null,0],['MD','Media','DM',null,2,0,null,0],
+ ['SV','Services, Stv. CSO','SS',null,1,0,1,0],
+ ['KA','Key Account Management und Kommunikation','SV',null,1,0,null,0],
+ ['SM','Service Management','SV',null,2,0,null,0],
+ ['SU','Support Management','SV',null,3,0,null,0],
+ ['IT','Support & IT','SU',null,1,0,null,0],
+ ['DS','Digital Services & KI','SS',null,2,1,1,0],
+ ['NH','Nachhaltigkeit','SS',null,3,0,1,0],
+ ['IM','Innovationsmanagement','IE',null,1,0,1,0],['PE','Produktentwicklung','IE',null,2,0,1,0],
+ ['SG','Segmentmanagement','IE',null,3,0,1,0],['EW','Erlebniswelten','IE',null,4,0,1,0],
+ ['UK','Unternehmenskommunikation','CS',null,1,0,1,0],
+ ['PR','Erlebnis-PR','UK',null,1,0,null,0],
+ ['DA','Direktionsassistenz','CS',null,2,0,2,0],
+ ['PM','Projektmanagement','CS',null,3,0,2,0],
+ ['PS','Projektassistenz','PM',null,1,0,null,0],
+ ['FI','Finanzen','CS',null,4,0,2,0],
+ ['PL','Personal','CS',null,5,0,2,0],
+ ['AU','Ausbildung','PL',null,1,0,null,0],
+ ['LE','Lernende & Praktikum','AU',null,1,0,null,1],
+ ['BD','Business Development Fernmärkte','CS',null,6,0,3,0],
+ ['BD2','Business Development Fernmärkte','BD',null,1,0,null,0]
+];
+/* Person: [einheit, vorname, nachname, L=Leitung/M=Mitglied, pensum_einheit, pensum_gesamt, funktion, sortierung] */
+const SNAP_P = [
+ ['GF','Martin','Vincenz','L',null,null,'CEO',1],['CS','Martin','Vincenz','L',null,null,'Leitung Corporate Services',1],
+ ['MK','Yves','Luetolf','L',90,90,'Leitung Marketing',2],['SS','Kerstin','Sigron','L',60,60,'Leitung Shared Services',3],
+ ['IE','Patrick','Dreher','L',null,null,'Leitung Innovation & Erlebnisentwicklung',4],
+ ['PA','Karin','Raimondo','L',null,60,0,5],['SP','Karin','Raimondo','L',null,60,0,5],['TR','Karin','Raimondo','L',null,60,0,5],
+ ['CA','Marc','Held','L',null,null,0,6],['FA','Marc','Held','L',null,null,0,6],['EN','Marc','Held','L',null,null,0,6],
+ ['CO','Ralph','Triet','L',null,null,0,7],
+ ['SP','Antonella','Klee','L',null,80,0,8],['ST','Antonella','Klee','L',null,80,0,8],
+ ['ME','Antonella','Klee','L',null,80,0,8],['GO','Antonella','Klee','L',null,80,0,8],
+ ['BI','Mike','Frei','L',90,90,0,9],['DM','Stephanie','Gram','L',null,null,0,10],
+ ['WW','Karin','Furger','L',30,50,0,11],['NH','Karin','Furger','M',20,50,0,11],
+ ['CC','Sara','Ragettli','L',null,null,0,12],
+ ['MD','Flavia','Gsell','L',40,100,0,13],['MB','Flavia','Gsell','L',60,100,0,13],
+ ['SM','Ramona','Caflisch','M',50,100,0,14],['FT','Ramona','Caflisch','L',30,100,0,14],['AU','Ramona','Caflisch','L',20,100,0,14],
+ ['SV','Theresa','Ecoffey','L',70,70,0,15],
+ ['PS','Tatjana','Marti','L',20,100,0,16],['SM','Tatjana','Marti','M',20,100,0,16],['KA','Tatjana','Marti','L',60,100,0,16],
+ ['SM','Romedi','Conradin','M',60,80,0,17],['SU','Romedi','Conradin','L',20,80,0,17],
+ ['SM','Katrin','Wohner','M',40,40,0,18],['IT','Carla','Dopfer','L',null,null,0,19],
+ ['NH','Claudio','Daguati','M',80,80,0,20],
+ ['IM','Mik','Häfliger','L',null,null,0,21],['PE','Marc','Woodtli','L',80,80,0,22],
+ ['SG','Manuela','Ruinatscha','L',60,60,0,23],['EW','Chantal','Derungs','L',50,50,0,24],
+ ['UK','Luzi','Bürkli','L',null,null,0,25],['PR','Nadja','Cantieni','L',null,null,0,26],
+ ['PR','Thalia','Wünsche','M',85,85,0,27],['PR','Marco','Hartmann','M',80,80,0,28],
+ ['PR','Cornelia','Schnell','M',50,50,0,29],['PR','Rebecca','Stocker','M',null,null,'Praktikantin Erlebnis-PR',30],
+ ['DA','Barbara','Dobson','L',null,null,0,31],['PM','Claudia','Markoff Schmied','L',80,80,0,32],
+ ['FI','Martin','Blaser','L',null,null,0,33],['PL','Silvia','Schneiter-Caduff','L',50,50,0,34],
+ ['LE','Valerio','Casanova','M',null,null,'Lernende/r (1. LJ)',35],['LE','Livia','Gienal','M',null,null,'Lernende/r (2. LJ)',36],
+ ['LE','Lynn','Peer','M',null,null,'Lernende/r (3. LJ)',37],['LE','Lynn','Inauen','M',null,null,'Praktikantin',38],
+ ['BD','Tamara','Löffel-Jäger','L',80,80,0,39],['BD2','Brigitta','Jud','L',null,null,0,40]
+];
+function snapshot(){
+  return {
+    einheiten: SNAP_U.map(([id,name,parent,farbe,sort,vak,spalte,ta]) => ({id,name,parent,farbe,sort,vakant:!!vak,spalte,titel_aus:!!ta})),
+    personen: SNAP_P.map(([u,vn,nn,r,p,g,f,s]) => ({einheit_id:u,vorname:vn,nachname:nn,rolle:r==='L'?'leitung':'mitglied',pensum:p,pensum_gesamt:g,funktion:f||null,sort:s}))
+  };
+}
+
+/* ================= Daten laden ================= */
+async function loadData(){
+  if(!CONFIG.anonKey) return {data:snapshot(), live:false, reason:'kein API-Key hinterlegt'};
+  const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+  try{
+    const res = await fetch(CONFIG.url + '/rest/v1/rpc/public_organigramm', {
+      method:'POST', signal:ctrl.signal,
+      headers:{'apikey':CONFIG.anonKey,'Authorization':'Bearer '+CONFIG.anonKey,
+               'Content-Type':'application/json','Content-Profile':CONFIG.schema},
+      body:'{}'
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return {data: await res.json(), live:true};
+  }catch(e){
+    return {data:snapshot(), live:false, reason:e.name==='AbortError' ? 'Zeitüberschreitung' : e.message};
+  }finally{ clearTimeout(t); }
+}
+
+/* ================= Hilfsfunktionen ================= */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = v => Number(v).toLocaleString('de-CH', {maximumFractionDigits:1});
+const share = p => p.pensum ?? p.pensum_gesamt;
+const fullName = p => p.vorname + ' ' + p.nachname;
+
+/* Saubere Trennstellen für lange deutsche Komposita (weiches Trennzeichen) */
+const SHY = '\u00AD';
+const DICT = {Kommunikation:'Kommuni'+SHY+'kation', Management:'Manage'+SHY+'ment', Nachhaltigkeit:'Nach'+SHY+'haltigkeit',
+              Merchandising:'Merchan'+SHY+'dising', Skitouren:'Ski'+SHY+'touren'};
+const hy = s => s.replace(/[A-Za-zÄÖÜäöüß]{9,}/g, w => DICT[w] ||
+  w.replace(/^(.{4,}?)(management|entwicklung|assistenz|kommunikation|welten|projekte|märkte|schaften|wandern)$/, '$1'+SHY+'$2'));
+
+function textOn(hex){
+  if(!hex) return '#fff';
+  const n = parseInt(hex.slice(1),16), r = n>>16, g = (n>>8)&255, b = n&255;
+  return (0.299*r + 0.587*g + 0.114*b) > 150 ? '#1f1a00' : '#fff';
+}
+function sortPersons(a,b){
+  if(a.rolle !== b.rolle) return a.rolle === 'leitung' ? -1 : 1;
+  return ((share(b) ?? -1) - (share(a) ?? -1)) || ((a.sort ?? 0) - (b.sort ?? 0));
+}
+function tagFor(p){
+  const f = p.funktion || '';
+  const lj = /\((\d\.\s*LJ)\)/.exec(f);
+  if(lj) return '(' + lj[1] + ')';
+  if(/praktikant/i.test(f)) return '(Praktikantin)';
+  const s = share(p);
+  return s != null ? '(' + fmt(s) + '%)' : '';
+}
+const nameHtml = p => { const t = tagFor(p); return esc(fullName(p)) + (t ? `<span class="nw">\u00a0${esc(t)}</span>` : ''); };
+
+/* ================= Modell ================= */
+let MODEL = null, MODE = null, META = [], CARD = new Map();
+const chart = document.getElementById('chart');
+
+function buildModel(data){
+  const units = (data.einheiten || []).map(u => ({...u, kids:[], persons:[]}));
+  const byId = new Map(units.map(u => [u.id, u]));
+  units.forEach(u => { if(u.parent && byId.has(u.parent)) byId.get(u.parent).kids.push(u); });
+  const bySort = (a,b) => ((a.sort ?? 0) - (b.sort ?? 0)) || a.name.localeCompare(b.name, 'de');
+  units.forEach(u => u.kids.sort(bySort));
+  (data.personen || []).forEach(p => { const u = byId.get(p.einheit_id); if(u) u.persons.push(p); });
+  const root = units.find(u => !u.parent);
+  if(!root) throw new Error('Keine Einheiten gefunden.');
+  // Farbe vom Bereich erben
+  (function inherit(u, c){ u.farbe = u.farbe || c; u.kids.forEach(k => inherit(k, u.farbe)); })(root, root.farbe);
+  return {root, byId};
+}
+
+/* ================= Rendering ================= */
+function cardHtml(u){
+  const ps = u.persons.slice().sort(sortPersons);
+  const body = ps.length
+    ? ps.map(p => {
+        const tip = [p.funktion || u.name, p.pensum_gesamt != null ? 'Gesamtpensum ' + fmt(p.pensum_gesamt) + '%' : null].filter(Boolean).join(' · ');
+        return `<div class="p" title="${esc(tip)}" data-s="${esc(fullName(p).toLowerCase())}">${nameHtml(p)}</div>`;
+      }).join('')
+    : `<div class="p vakant">${u.vakant ? 'vakant' : '–'}</div>`;
+  const title = u.titel_aus ? '' : `<h3>${esc(hy(u.name))}</h3>`;
+  return `<article class="card${u.titel_aus ? ' notitle' : ''}" data-id="${esc(u.id)}" data-u="${esc(u.name.toLowerCase())}">${title}${body}</article>`;
+}
+const dfsCards = u => cardHtml(u) + u.kids.map(dfsCards).join('');
+
+function render(mode){
+  const {root} = MODEL;
+  META = [];
+  const ceoP = root.persons.filter(p => p.rolle === 'leitung').sort(sortPersons);
+  const ceoHtml = `<div class="ceo-row"><div class="ceo" style="background:${esc(root.farbe || '#c4c2bc')};color:${textOn(root.farbe || '#c4c2bc')}">
+      <b>${esc(ceoP[0]?.funktion || 'CEO')}</b><span>${ceoP.map(p => esc(fullName(p))).join(', ') || '&nbsp;'}</span></div></div>`;
+
+  const bereiche = root.kids.map(b => {
+    let cols;
+    if(mode === 'narrow'){
+      cols = b.kids.length ? [b.kids.slice().sort((x,y) => ((x.spalte || 99) - (y.spalte || 99)) || ((x.sort ?? 0) - (y.sort ?? 0)))] : [];
+    } else {
+      const n = Math.max(1, ...b.kids.map(k => k.spalte || 1));
+      cols = Array.from({length:n}, () => []);
+      b.kids.forEach(k => cols[Math.min(n, k.spalte || n) - 1].push(k));
+      cols = cols.filter(c => c.length);
+    }
+    META.push({id:b.id, cols:cols.map(c => c.map(k => k.id))});
+    const n = Math.max(1, cols.length);
+    const tmpl = mode === 'wide' ? `repeat(${n},minmax(0,1fr))`
+               : mode === 'stack' ? `repeat(${n},minmax(0,215px))` : 'minmax(0,340px)';
+    const lead = b.persons.filter(p => p.rolle === 'leitung').sort(sortPersons);
+    return `<section class="bereich" aria-label="${esc(b.name)}" style="${mode === 'wide' ? `flex:${n} 1 0` : ''}">
+      <div class="b-head" data-head="${esc(b.id)}" style="background:${esc(b.farbe || '#555')};color:${textOn(b.farbe)}">
+        <h2>${esc(hy(b.name))}</h2>
+        <div class="lead">${lead.map(nameHtml).join('<br>') || '&nbsp;'}</div>
+      </div>
+      <div class="b-body" data-body="${esc(b.id)}">
+        <div class="cols" style="grid-template-columns:${tmpl};justify-content:center">
+          ${cols.map(c => `<div class="col">${c.map(dfsCards).join('')}</div>`).join('')}
+        </div>
+      </div>
+    </section>`;
+  }).join('');
+
+  chart.className = 'chart ' + mode;
+  chart.innerHTML = `<svg class="lines" aria-hidden="true"></svg>${ceoHtml}<div class="bereiche">${bereiche}</div>`;
+  CARD = new Map([...chart.querySelectorAll('.card')].map(el => [el.dataset.id, el]));
+  applySearch();
+}
+
+/* ================= Verbindungslinien (aus echten Kartenpositionen berechnet) ================= */
+const HALF = 7;     // halber Spaltenabstand -> Linie mittig in der Lücke
+const BUS = 10;     // Abstand Sammelschiene unter dem Bereichskopf
+const VGAP = 12;    // vertikaler Kartenabstand
+
+function drawLines(){
+  const svg = chart.querySelector('svg.lines');
+  if(!svg) return;
+  const cr = chart.getBoundingClientRect();
+  const box = el => { const r = el.getBoundingClientRect();
+    return {l:r.left-cr.left, r:r.right-cr.left, t:r.top-cr.top, b:r.bottom-cr.top, cx:(r.left+r.right)/2-cr.left, cy:(r.top+r.bottom)/2-cr.top}; };
+  const card = id => box(CARD.get(id));
+  const q = v => Math.round(v) + .5;
+  const opp = s => s === 'left' ? 'right' : 'left';
+  let d = '';
+  const seg = (x1,y1,x2,y2) => { d += `M${q(x1)} ${q(y1)}L${q(x2)} ${q(y2)}`; };
+
+  function drawKids(u, side, depth){
+    const ks = u.kids;
+    if(!ks.length) return;
+    const p = card(u.id);
+    if(ks.length === 1){
+      const k = card(ks[0].id);
+      if(ks[0].titel_aus){                      // Klammer rechts (z. B. Lernende)
+        const x = p.r + HALF;
+        seg(p.r,p.cy,x,p.cy); seg(x,p.cy,x,k.cy); seg(x,k.cy,k.r,k.cy);
+      } else seg(p.cx,p.b,p.cx,k.t);            // direkt darunter
+    } else {
+      const s = depth % 2 ? opp(side) : side;
+      const sx = s === 'left' ? p.l - HALF : p.r + HALF;
+      const y0 = p.b + VGAP/2;
+      const last = card(ks[ks.length-1].id);
+      seg(p.cx,p.b,p.cx,y0); seg(p.cx,y0,sx,y0); seg(sx,y0,sx,last.cy);
+      ks.forEach(k => { const c = card(k.id); seg(sx,c.cy, s === 'left' ? c.l : c.r, c.cy); });
+    }
+    ks.forEach(k => drawKids(k, side, depth + 1));
+  }
+
+  // CEO -> Bereiche
+  const ceoEl = chart.querySelector('.ceo');
+  const heads = META.map(m => box(chart.querySelector(`[data-head="${CSS.escape(m.id)}"]`)));
+  if(ceoEl && heads.length){
+    const ceo = box(ceoEl);
+    if(MODE === 'wide'){
+      const y = ceo.b + (Math.min(...heads.map(h => h.t)) - ceo.b) / 2;
+      seg(ceo.cx,ceo.b,ceo.cx,y);
+      seg(Math.min(ceo.cx, heads[0].cx), y, Math.max(ceo.cx, heads[heads.length-1].cx), y);
+      heads.forEach(h => seg(h.cx,y,h.cx,h.t));
+    } else seg(ceo.cx,ceo.b,ceo.cx,heads[0].t);
+  }
+
+  // Bereich -> Einheiten
+  META.forEach((m, i) => {
+    if(!m.cols.length) return;
+    const head = heads[i];
+    const body = box(chart.querySelector(`[data-body="${CSS.escape(m.id)}"]`));
+    const busY = body.t + BUS;
+    const xs = [head.cx];
+    seg(head.cx, head.b, head.cx, busY);
+    m.cols.forEach(ids => {
+      const D = ids.map(id => MODEL.byId.get(id));
+      let nested = 'left';
+      if(D.length === 1){
+        const c = card(D[0].id);
+        seg(c.cx,busY,c.cx,c.t); xs.push(c.cx);
+      } else {
+        const anyMulti = D.some(u => u.kids.length > 1);
+        nested = D[0].kids.length > 1 ? 'right' : 'left';
+        const ds = anyMulti ? opp(nested) : 'left';
+        const f = card(D[0].id), l = card(D[D.length-1].id);
+        const sx = ds === 'left' ? f.l - HALF : f.r + HALF;
+        seg(sx,busY,sx,l.cy);
+        D.forEach(u => { const c = card(u.id); seg(sx,c.cy, ds === 'left' ? c.l : c.r, c.cy); });
+        xs.push(sx);
+      }
+      D.forEach(u => drawKids(u, nested, 0));
+    });
+    const mn = Math.min(...xs), mx = Math.max(...xs);
+    if(mx - mn > 1) seg(mn,busY,mx,busY);
+  });
+
+  svg.setAttribute('width', chart.clientWidth);
+  svg.setAttribute('height', chart.scrollHeight);
+  svg.innerHTML = `<path d="${d}"/>`;
+}
+
+/* ================= Layout / Responsiveness ================= */
+const pickMode = w => w >= 1150 ? 'wide' : w >= 640 ? 'stack' : 'narrow';
+
+function syncHeads(){
+  const hs = [...chart.querySelectorAll('.b-head')];
+  hs.forEach(h => h.style.minHeight = '');
+  if(MODE !== 'wide' || !hs.length) return;
+  const max = Math.max(...hs.map(h => h.offsetHeight));
+  hs.forEach(h => h.style.minHeight = max + 'px');
+}
+
+let raf = 0, lastW = 0;
+function layout(){
+  if(!MODEL) return;
+  const w = chart.clientWidth;
+  const mode = pickMode(w);
+  const fs = mode === 'wide' ? Math.min(13.5, Math.max(11, w / 116)) : 13;
+  chart.style.fontSize = fs.toFixed(2) + 'px';
+  if(mode !== MODE){ MODE = mode; render(mode); }
+  if(w !== lastW || true){ syncHeads(); }
+  lastW = w;
+  drawLines();
+}
+const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(layout); };
+new ResizeObserver(schedule).observe(chart);
+window.matchMedia('print').addEventListener?.('change', schedule);
+window.addEventListener('beforeprint', layout);
+
+/* ================= Suche ================= */
+function applySearch(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  chart.querySelectorAll('.card').forEach(c => {
+    if(!q){ c.classList.remove('dim','hit'); return; }
+    const hit = c.dataset.u.includes(q) || [...c.querySelectorAll('.p[data-s]')].some(p => p.dataset.s.includes(q));
+    c.classList.toggle('hit', hit); c.classList.toggle('dim', !hit);
+  });
+}
+document.getElementById('q').addEventListener('input', applySearch);
+
+/* ================= Start ================= */
+(async function(){
+  const status = document.getElementById('status');
+  const {data, live, reason} = await loadData();
+  try{
+    MODEL = buildModel(data);
+    MODE = null;
+    layout();
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+  }catch(e){
+    chart.innerHTML = `<div class="error">Organigramm konnte nicht angezeigt werden: ${esc(e.message)}</div>`;
+    return;
+  }
+  status.dataset.state = live ? 'live' : 'snapshot';
+  status.textContent = live ? 'Live-Daten aus Supabase' : 'Gespeicherter Stand (' + reason + ')';
+})();
+</script>
+</body>
+</html>
