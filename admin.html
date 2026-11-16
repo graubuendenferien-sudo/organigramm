@@ -21,6 +21,7 @@
   button.primary:hover{filter:brightness(1.1)}
   button.danger{color:var(--bad);border-color:#e3bcbc}
   button:disabled{opacity:.5;cursor:default}
+  button.linkish{border:0;background:none;color:#2b5d8a;padding:4px 0;text-decoration:underline}
   button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #4F7399;outline-offset:1px}
   input,select,textarea{font:inherit;padding:6px 8px;border:1px solid #c3c9cf;border-radius:5px;background:#fff;color:var(--ink);max-width:100%}
   label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
@@ -43,6 +44,7 @@
   .box{max-width:420px;margin:60px auto;padding:26px;border:1px solid var(--line);border-radius:8px}
   .box h2{margin-top:0}
   .box input{width:100%;margin:10px 0}
+  .box input.code{font-size:24px;letter-spacing:.35em;text-align:center}
   .msg{padding:10px 12px;border-radius:6px;margin:10px 0;font-size:13px}
   .msg.ok{background:#e1f1e8}.msg.err{background:#f8e0e0}.msg.info{background:var(--panel)}
   dialog{border:0;border-radius:10px;padding:0;width:min(860px,96vw);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.25)}
@@ -73,6 +75,10 @@ const CONFIG = {
   url: 'https://buancuvsjxokxijbnrxi.supabase.co',
   anonKey: 'sb_publishable_SOw8SiWgP7NQ2mr_MI0j5w_tdMsADsF'
 };
+/* Fehler aus dem Anmeldelink merken (z. B. abgelaufen oder vom Mail-Virenscanner verbraucht) */
+let pendingMsg = /error_code=otp_expired|error=access_denied/.test(location.hash)
+  ? 'Der Anmeldelink ist abgelaufen oder wurde schon benutzt. Das passiert oft, wenn der Mail-Virenscanner den Link vorab öffnet. Bitte fordere einen neuen Code an und gib den Code aus der E-Mail ein.'
+  : '';
 const sb = supabase.createClient(CONFIG.url, CONFIG.anonKey, { db: { schema: 'organigramm' } });
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -85,24 +91,43 @@ function toast(t){ const e = $('#toast'); e.textContent = t; e.classList.add('sh
 
 const S = { user: null, units: [], people: [], det: new Map(), zu: [], pr: new Map(), view: 'personen', q: '', onlyActive: true };
 
-/* ================= Login ================= */
-function loginView(msg = '', kind = 'info'){
-  app.innerHTML = `<div class="box"><h2>Organigramm pflegen</h2>
-    <p class="small">Melde dich mit deiner Firmen-E-Mail an. Du erhältst einen Anmeldelink per E-Mail.</p>
-    <form id="lf"><label>E-Mail-Adresse<input type="email" id="em" required autocomplete="email" placeholder="vorname.nachname@graubuenden.ch"></label>
-    <button class="primary" style="width:100%">Anmeldelink senden</button></form>
-    ${msg ? `<div class="msg ${kind}">${esc(msg)}</div>` : ''}</div>`;
-  $('#lf').onsubmit = async e => {
-    e.preventDefault();
-    const btn = e.target.querySelector('button'); btn.disabled = true;
-    const { error } = await sb.auth.signInWithOtp({
-      email: $('#em').value.trim(),
-      options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname }
-    });
-    btn.disabled = false;
-    if (error) loginView('Anmeldung nicht möglich: ' + error.message + ' (Ist die Adresse für den Zugang freigeschaltet?)', 'err');
-    else loginView('Link gesendet. Bitte öffne die E-Mail und klicke auf den Link.', 'ok');
-  };
+/* ================= Login (Code aus der E-Mail oder Link) ================= */
+function loginView(msg = '', kind = 'info', step = 'email', email = ''){
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  app.innerHTML = step === 'email'
+    ? `<div class="box"><h2>Organigramm pflegen</h2>
+        <p class="small">Melde dich mit deiner Firmen-E-Mail an. Du erhältst eine E-Mail mit einem Anmeldecode.</p>
+        <form id="lf"><label>E-Mail-Adresse<input type="email" id="em" required autocomplete="email" value="${esc(email)}" placeholder="vorname.nachname@graubuenden.ch"></label>
+        <button class="primary" style="width:100%">Code anfordern</button></form>
+        ${msg ? `<div class="msg ${kind}">${esc(msg)}</div>` : ''}</div>`
+    : `<div class="box"><h2>Code eingeben</h2>
+        <p class="small">Wir haben eine E-Mail an <b>${esc(email)}</b> geschickt. Gib den Code aus der E-Mail ein. Das kann einige Minuten dauern. Prüfe auch den Spam-Ordner.</p>
+        <form id="cf"><label>Code<input class="code" id="cd" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10"></label>
+        <button class="primary" style="width:100%">Anmelden</button></form>
+        ${msg ? `<div class="msg ${kind}">${esc(msg)}</div>` : ''}
+        <p><button type="button" class="linkish" id="back">Andere Adresse oder neuen Code anfordern</button></p></div>`;
+  if (step === 'email'){
+    $('#lf').onsubmit = async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button'); btn.disabled = true;
+      const em = $('#em').value.trim();
+      const { error } = await sb.auth.signInWithOtp({
+        email: em, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+      btn.disabled = false;
+      if (error) loginView('Anmeldung nicht möglich: ' + error.message + ' (Ist die Adresse für den Zugang freigeschaltet?)', 'err', 'email', em);
+      else loginView('', 'info', 'code', em);
+    };
+  } else {
+    $('#cd').focus();
+    $('#back').onclick = () => loginView('', 'info', 'email', email);
+    $('#cf').onsubmit = async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button'); btn.disabled = true;
+      const { error } = await sb.auth.verifyOtp({ email, token: $('#cd').value.trim(), type: 'email' });
+      btn.disabled = false;
+      if (error) loginView('Der Code ist falsch oder abgelaufen. Bitte prüfe ihn oder fordere einen neuen an. (' + error.message + ')', 'err', 'code', email);
+    };
+  }
 }
 function noAccessView(){
   app.innerHTML = `<div class="box"><h2>Kein Zugriff</h2>
@@ -130,7 +155,7 @@ async function load(){
 const unitById = id => S.units.find(u => u.id === id);
 const personById = id => S.people.find(p => p.id === id);
 const pname = p => p ? `${p.vorname} ${p.nachname}` : '';
-function unitOrder(){            // Baum-Reihenfolge mit Pfad
+function unitOrder(){
   const out = [];
   const kids = id => S.units.filter(u => u.uebergeordnet_id === id).sort((a,b) => a.sortierung - b.sortierung || a.name.localeCompare(b.name));
   (function walk(id, path){ kids(id).forEach(u => { const p = [...path, u.name]; out.push({ u, label: p.join(' › '), depth: path.length }); walk(u.id, p); }); })(null, []);
@@ -371,7 +396,11 @@ function openUnit(id){
 
 /* ================= Start ================= */
 async function init(session){
-  if (!session){ S.user = null; return loginView(); }
+  if (!session){
+    S.user = null;
+    const m = pendingMsg; pendingMsg = '';
+    return loginView(m, m ? 'err' : 'info');
+  }
   S.user = session.user;
   app.innerHTML = '<p class="small">Wird geladen …</p>';
   const a = await sb.from('admin').select('user_id').eq('user_id', session.user.id);
